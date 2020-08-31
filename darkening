@@ -1,0 +1,32 @@
+def limb_darkening(m):
+    hpc_coords = sunpy.map.maputils.all_coordinates_from_map(m)
+    r = np.sqrt(hpc_coords.Tx ** 2 + hpc_coords.Ty ** 2) / m.rsun_obs
+    r = r.value
+    s = m.data
+    s = s/np.max(s)
+    r = r[s > 0.6]
+    s = s[s > 0.6]
+    p0 = [0.6, 1, 1, 1, 1]
+    plt.plot(r, s, ',')
+    plt.plot(r, limb_poly(r, p0))
+    #aaa = scipy.optimize.curve_fit(limb_poly, r[r < 1.01], s, p0 = p0)
+    k = scipy.optimize.basinhopping(lambda x: np.sum(np.power(limb_poly(r, x) - s, 2)), x0 = p0)
+    print(k['fun'])
+    aaa = k['x']
+    plt.plot(r, limb_poly(r, aaa), ',')
+    plt.plot(r, s, ',')
+    return(aaa)
+
+def darkening_correction(m):
+    
+    coeffs = [0.61661053,  0.81938545, -0.62725838, -0.19535833,  0.38662072]
+    
+    hpc_coords = sunpy.map.maputils.all_coordinates_from_map(m)
+    r = np.sqrt(hpc_coords.Tx ** 2 + hpc_coords.Ty ** 2) / m.rsun_obs
+    r = r.value
+    s = m.data
+    mask = np.where(r < 1, limb_poly(r, coeffs), 1)
+    s = s/mask
+    cor_map = sunpy.map.Map(s, m.fits_header)
+    return cor_map
+    
