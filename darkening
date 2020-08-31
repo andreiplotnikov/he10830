@@ -30,3 +30,12 @@ def darkening_correction(m):
     cor_map = sunpy.map.Map(s, m.fits_header)
     return cor_map
     
+def limb_poly(x, ac):
+    a = ac/np.sum(ac)
+    s = np.zeros_like(x)
+    mu = np.cos(x * np.pi * 0.5)
+    for i in range(len(a)):
+        s = s + a[i]*np.power(mu, i)
+    return s
+            
+    
